@@ -1,0 +1,1 @@
+# mind-teams-challenge
