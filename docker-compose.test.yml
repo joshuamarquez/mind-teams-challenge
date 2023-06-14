@@ -1,0 +1,12 @@
+services:
+  test:
+    build: .
+    command:
+      - bash
+      - -c
+      - |
+          npm run test:e2e
+    volumes:
+      - ./:/opt/app
+    ports:
+      - 3000:3000

@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Team } from './Team.entity';
+import { User } from './User.entity';
+import { Log } from './Log.entity';
  
 @Entity('Account')
 export class Account {
@@ -8,13 +9,10 @@ export class Account {
  
   @Column()
   name: string;
- 
-  @Column({ unique: true })
-  client: string;
 
-  @Column()
-  owner: string;
+  @OneToMany(() => User, user => user.account)
+  users: User[]
 
-  // @OneToMany(() => Team, team => team.account)
-  // teams: Team[]
+  @OneToMany(() => Log, log => log.account)
+  logs: Log[]
 }

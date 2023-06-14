@@ -1,6 +1,8 @@
-import { Entity, Column, JoinColumn, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, Column, JoinColumn, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate, ManyToOne, OneToMany } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Account } from './Account.entity';
+import { Exclude, instanceToPlain } from 'class-transformer';
+import { Log } from './Log.entity';
  
 @Entity('User')
 export class User {
@@ -13,14 +15,19 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Exclude({ toPlainOnly: true })
   @Column()
   password: string;
 
   @Column({ enum: ['super', 'admin', 'user'] })
   role: string
 
-  // @JoinColumn()
-  // account: Account
+  @ManyToOne(() => Account, account => account.id, { nullable: true })
+  @JoinColumn({name : 'account_id'})
+  account: Account
+
+  @OneToMany(() => Log, log => log.user)
+  logs: Log[]
 
   @BeforeInsert()
   async hashPasswordBeforeInsert(): Promise<void> {
@@ -28,5 +35,9 @@ export class User {
       const salt = await bcrypt.genSalt();
       this.password = await bcrypt.hash(this.password, salt);
     }
+  }
+
+  toJSON() {
+    return instanceToPlain(this);
   }
 }

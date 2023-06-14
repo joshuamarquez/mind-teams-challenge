@@ -1,5 +1,5 @@
-import { Controller, Post, Put, Param, Body, UseGuards } from '@nestjs/common';
-import { UsersService, UserInterface } from '../users/users.service';
+import { Controller, Post, Put, Param, Body, UseGuards, Delete, Get, UseInterceptors, ClassSerializerInterceptor, HttpCode, HttpStatus } from '@nestjs/common';
+import { UsersService, UserClass } from '../users/users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../roles/roles.decorator';
 import { Role } from '../roles/role.enum';
@@ -11,17 +11,32 @@ export class UsersController {
         private userService: UsersService,
     ) {}
 
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Get()
+    @Roles(Role.Super, Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    find() {
+        return this.userService.find();
+    }
+
     @Put(':id')
     @Roles(Role.Super, Role.Admin)
     @UseGuards(AuthGuard, RolesGuard)
-    update(@Param('id') id: string, @Body() body: UserInterface) {
+    update(@Param('id') id: number, @Body() body: UserClass) {
         return this.userService.update(id, body);
     }
 
-    // @Post(':id/addToAccount/:accountId')
-    // @Roles(Role.Super, Role.Admin)
-    // @UseGuards(AuthGuard, RolesGuard)
-    // addToAccount(@Param('id') id: string, @Param('accountId') accountId: string) {
-    //     return this.userService.addToAccount(id, accountId);
-    // }
+    @Delete(':id')
+    @Roles(Role.Super, Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    delete(@Param('id') id: number) {
+        return this.userService.delete(id);
+    }
+
+    @Post(':id/addToAccount/:accountId')
+    @Roles(Role.Super, Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    addToAccount(@Param('id') id: number, @Param('accountId') accountId: number) {
+        return this.userService.addToAccount(id, accountId);
+    }
 }

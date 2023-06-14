@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
-import { UsersService, UserInterface } from '../users/users.service';
+import { UsersService, UserClass } from '../users/users.service';
 import { Roles } from '../roles/roles.decorator';
 import { Role } from '../roles/role.enum';
 import { RolesGuard } from '../roles/roles.guard';
@@ -28,11 +28,10 @@ export class AuthController {
     return this.authService.signIn(signInDto.email, signInDto.password);
   }
 
-  @HttpCode(HttpStatus.OK)
   @Post('signup')
   @UseGuards(AuthGuard)
   @Roles(Role.Super)
-  signUp(@Body() signUpDto: UserInterface) {
+  signUp(@Body() signUpDto: UserClass) {
     return this.userService.create(signUpDto);
   }
 

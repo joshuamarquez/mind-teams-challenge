@@ -1,56 +1,106 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from 'src/entity/User.entity';
+import { User } from '../entity/User.entity';
 import * as bcrypt from 'bcrypt';
+import { AccountInterface, AccountService } from '../account/account.service';
+import { Exclude } from 'class-transformer';
+import { Log } from '../entity/Log.entity';
+import { LogInterface } from '../logs/logs.service';
 
-export interface UserInterface {
-  id?: string,
-  name: string,
-  email: string,
-  password: string
-  role: string
+export class UserClass {
+  id?: number;
+  name: string;
+  email: string;
+
+  @Exclude()
+  password: string;
+
+  role: string;
+  account: AccountInterface
 }
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<UserInterface>
+    private userRepository: Repository<UserClass>,
+    private accountService: AccountService,
+    @InjectRepository(Log)
+    private logRepository: Repository<LogInterface>,
   ) { }
 
-  onApplicationBootstrap(): any {
-    this.findOne('super@gmail.com').then((user: UserInterface) : Promise<UserInterface | string> => {
-      if (!user) {
-        return this.create({
-          name: 'super admin',
-          email: 'super@gmail.com',
-          password: 'mypass1234',
-          role: 'super'
-        });
-      }
+  async onApplicationBootstrap(): Promise<any> {
+    let account = await this.accountService.findOneBy({ name: 'super admin' });
 
-      return Promise.resolve('user exists!');
-    })
-      .then(console.log)
-      .catch(console.error);
+    if (!account) {
+      account = await this.accountService.create({
+        name: 'super admin'
+      });
+    }
+
+    const user = await this.findOne('super@gmail.com');
+
+    if (!user) {
+      return this.create({
+        name: 'super admin',
+        email: 'super@gmail.com',
+        password: 'mypass1234',
+        role: 'super',
+        account
+      });
+    }
+
+    console.log('user exists!');
+  
+    return Promise.resolve();
   }
 
-  findOne(email: string): Promise<UserInterface | undefined> {
+  findOne(email: string): Promise<UserClass | undefined> {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  create(user: UserInterface): Promise<UserInterface> {
+  find(): Promise<UserClass[]> {
+    return this.userRepository.find();
+  }
+
+  create(user: UserClass): Promise<UserClass> {
     return this.userRepository.save(
       this.userRepository.create(user)
     );
   }
 
-  // addToAccount(id, accountId): Promise<UserInterface> {
-  //   return this.userRepository.update(id, {  });
-  // }
+  async addToAccount(id: number, accountId: number): Promise<any> {
+    const account = await this.accountService.findOneBy({ id: accountId });
+    if (!account) {
+      throw new NotFoundException('account not found');
+    }
 
-  async update(id: string, data: UserInterface): Promise<any> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+
+    // add user to provided account
+    await this.userRepository.update(id, { account });
+
+    // update previous log record if exists
+    const previousLog = await this.logRepository.findOneBy({ user, account, endDate: null });
+    if (previousLog) {
+      await this.logRepository.update(previousLog.id, { endDate: new Date() });
+    }
+
+    // log new user-account relation
+    return this.logRepository.save(
+      this.logRepository.create({
+        startDate: new Date,
+        user,
+        account
+      })
+    );
+  }
+
+  async update(id: number, data: UserClass): Promise<any> {
     const user = await this.userRepository.findOneBy({ id });
 
     if (!user) {
@@ -67,5 +117,15 @@ export class UsersService {
       email: data.email,
       password: data.password
     }));
+  }
+
+  async delete(id: number): Promise<any> {
+    const account = await this.userRepository.findOneBy({ id });
+
+    if (!account) {
+      throw new NotFoundException();
+    }
+
+    return this.userRepository.delete(id);
   }
 }

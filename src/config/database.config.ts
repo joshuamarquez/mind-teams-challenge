@@ -1,3 +1,4 @@
+import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
  
 export const devConfig: PostgresConnectionOptions = {
@@ -7,6 +8,15 @@ export const devConfig: PostgresConnectionOptions = {
   username: 'postgres',
   password: 'postgres',
   database: 'postgres',
-  entities: ["dist/**/*.entity{.ts,.js}"],
+  entities: [__dirname + "/../**/*.entity{.ts,.js}"],
   synchronize: true,
+}
+
+export const testConfig: TypeOrmModuleOptions = {
+  type: "sqlite",
+  database: ":memory:",
+  dropSchema: true,
+  entities: [__dirname + "/../**/*.entity{.ts,.js}"],
+  synchronize: true,
+  logging: false
 }
