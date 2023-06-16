@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, FindOptionsRelations, FindOptionsWhere, IsNull, Repository } from 'typeorm';
 import { User } from '../entity/User.entity';
 import * as bcrypt from 'bcrypt';
 import { AccountInterface, AccountService } from '../account/account.service';
@@ -57,11 +57,11 @@ export class UsersService {
   }
 
   findOne(email: string): Promise<UserClass | undefined> {
-    return this.userRepository.findOne({ where: { email } });
+    return this.userRepository.findOne({ where: { email }, relations: { account: true } });
   }
 
-  find(): Promise<UserClass[]> {
-    return this.userRepository.find();
+  find(where?: FindOptionsWhere<UserClass>, relations?: FindOptionsRelations<UserClass>): Promise<UserClass[]> {
+    return this.userRepository.find({ where, relations });
   }
 
   create(user: UserClass): Promise<UserClass> {
@@ -85,7 +85,7 @@ export class UsersService {
     await this.userRepository.update(id, { account });
 
     // update previous log record if exists
-    const previousLog = await this.logRepository.findOneBy({ user, account, endDate: null });
+    const previousLog = await this.logRepository.findOneBy({ user, account: user.account, endDate: IsNull() });
     if (previousLog) {
       await this.logRepository.update(previousLog.id, { endDate: new Date() });
     }

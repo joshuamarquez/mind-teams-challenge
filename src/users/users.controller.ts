@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Param, Body, UseGuards, Delete, Get, UseInterceptors, ClassSerializerInterceptor, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Put, Param, Body, UseGuards, Delete, Get, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
 import { UsersService, UserClass } from '../users/users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { Roles } from '../roles/roles.decorator';
@@ -16,7 +16,7 @@ export class UsersController {
     @Roles(Role.Super, Role.Admin)
     @UseGuards(AuthGuard, RolesGuard)
     find() {
-        return this.userService.find();
+        return this.userService.find(null, { account: true });
     }
 
     @Put(':id')

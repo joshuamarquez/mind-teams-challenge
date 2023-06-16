@@ -52,6 +52,8 @@ export class LogsService {
             options.where = { ...options.where, endDate: BeforeDate(new Date(query.endDate)) };
         }
 
+        options.order = { startDate: { direction: 'DESC' } };
+
         return this.logRepository.find(options);
     }
 }

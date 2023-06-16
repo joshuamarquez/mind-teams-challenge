@@ -4,11 +4,13 @@ import { Role } from '../roles/role.enum';
 import { Roles } from '../roles/roles.decorator';
 import { AccountInterface, AccountService } from './account.service';
 import { RolesGuard } from '../roles/roles.guard';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('account')
 export class AccountController {
     constructor(
-        private accountService: AccountService
+        private accountService: AccountService,
+        private userService: UsersService
     ) { }
 
     @Get()
@@ -16,6 +18,20 @@ export class AccountController {
     @UseGuards(AuthGuard, RolesGuard)
     find() {
         return this.accountService.find();
+    }
+
+    @Get(':id')
+    @Roles(Role.Super, Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    finOne(@Param('id') id: number) {
+        return this.accountService.findOneBy({ id });
+    }
+
+    @Get(':id/users')
+    @Roles(Role.Super, Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    getUsers(@Param('id') id: number) {
+        return this.userService.find({ account: { id } });
     }
 
     @Post()

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { User } from './User.entity';
 import { Account } from './Account.entity';
  
@@ -13,11 +13,11 @@ export class Log {
   @Column({ nullable: true })
   endDate: Date;
 
-  @OneToOne(() => User, user => user.id)
+  @ManyToOne(() => User, user => user.id)
   @JoinColumn({name : 'user_id'})
   user: User
 
-  @OneToOne(() => Account, account => account.id)
+  @ManyToOne(() => Account, account => account.id)
   @JoinColumn({name : 'account_id'})
   account: Account
 }
